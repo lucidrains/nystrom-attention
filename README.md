@@ -30,7 +30,7 @@ attn = NystromAttention(
 x = torch.randn(1, 16384, 512)
 mask = torch.ones(1, 16384).bool()
 
-attn(x, mask = mask) # (1, 1024, 512)
+attn(x, mask = mask) # (1, 16384, 512)
 ```
 
 ## Citations
