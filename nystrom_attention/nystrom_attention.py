@@ -73,7 +73,7 @@ class NystromAttention(nn.Module):
 
         q *= self.scale
 
-        l = ceil(q.shape[1] / m)
+        l = ceil(n / m)
         q_landmarks = reduce(q, '... (n l) d -> ... n d', 'mean', l = l)
         k_landmarks = reduce(k, '... (n l) d -> ... n d', 'mean', l = l)
 

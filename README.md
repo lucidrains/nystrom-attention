@@ -25,8 +25,8 @@ attn = NystromAttention(
     residual = True         # whether to do an extra residual with the value or not. supposedly faster convergence if turned on
 )
 
-x = torch.randn(1, 1024, 512)
-mask = torch.ones(1, 1024).bool()
+x = torch.randn(1, 16384, 512)
+mask = torch.ones(1, 16384).bool()
 
 attn(x, mask = mask) # (1, 1024, 512)
 ```
