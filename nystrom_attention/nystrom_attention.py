@@ -53,7 +53,7 @@ class NystromAttention(nn.Module):
         if residual:
             self.res_conv = nn.Conv2d(heads, heads, 1, groups = heads, bias = False)
 
-    def forward(self, x, mask = None):
+    def forward(self, x, mask = None, return_attn = False):
         b, n, _, h, m, iters = *x.shape, self.heads, self.m, self.pinv_iterations
 
         # pad so that sequence can be evenly divided into m landmarks
@@ -107,8 +107,11 @@ class NystromAttention(nn.Module):
 
         attn1, attn2, attn3 = map(lambda t: t.softmax(dim = -1), (sim1, sim2, sim3))
         attn2_inv = moore_penrose_iter_pinv(attn2, iters)
+        attn = attn1 @ attn2_inv @ attn3
 
-        out = attn1 @ attn2_inv @ attn3 @ v
+        # aggregate
+
+        out = einsum('... i j, ... j d -> ... i d', attn, v)
 
         # add depth-wise conv residual of values
 
@@ -119,4 +122,9 @@ class NystromAttention(nn.Module):
 
         out = rearrange(out, 'b h n d -> b n (h d)', h = h)
         out = self.to_out(out)
-        return out[:, :n]
+        out = out[:, :n]
+
+        if return_attn:
+            return out, attn
+
+        return out
