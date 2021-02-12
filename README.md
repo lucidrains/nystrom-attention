@@ -1,3 +1,5 @@
+<img src="./diagram.png" width="500px"></img>
+
 ## Nystrom Attention
 
 Implementation of Nystrom Self-attention, from the paper <a href="https://arxiv.org/abs/2102.03902">Nystromformer</a>.
