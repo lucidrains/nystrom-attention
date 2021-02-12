@@ -37,9 +37,11 @@ class NystromAttention(nn.Module):
         heads = 8,
         m = 256,
         pinv_iterations = 6,
-        residual = True
+        residual = True,
+        eps = 1e-8
     ):
         super().__init__()
+        self.eps = eps
         inner_dim = heads * dim_head
 
         self.m = m
@@ -55,7 +57,7 @@ class NystromAttention(nn.Module):
             self.res_conv = nn.Conv2d(heads, heads, 1, groups = heads, bias = False)
 
     def forward(self, x, mask = None, return_attn = False):
-        b, n, _, h, m, iters = *x.shape, self.heads, self.m, self.pinv_iterations
+        b, n, _, h, m, iters, eps = *x.shape, self.heads, self.m, self.pinv_iterations, self.eps
 
         # pad so that sequence can be evenly divided into m landmarks
 
@@ -80,17 +82,27 @@ class NystromAttention(nn.Module):
 
         q *= self.scale
 
-        # generate landmarks by mean reduction
+        # generate landmarks by sum reduction, and then calculate mean using the mask
 
         l = ceil(n / m)
         landmark_einops_eq = '... (n l) d -> ... n d'
-        q_landmarks = reduce(q, landmark_einops_eq, 'mean', l = l)
-        k_landmarks = reduce(k, landmark_einops_eq, 'mean', l = l)
+        q_landmarks = reduce(q, landmark_einops_eq, 'sum', l = l)
+        k_landmarks = reduce(k, landmark_einops_eq, 'sum', l = l)
 
-        # generate mask for landmarks
+        # calculate landmark mask, and also get sum of non-masked elements in preparation for masked mean
 
+        divisor = l
         if exists(mask):
-            mask_landmarks = reduce(mask, '... (n l) -> ... n', 'sum', l = l) > 0
+            mask_landmarks_sum = reduce(mask, '... (n l) -> ... n', 'sum', l = l)
+            divisor = mask_landmarks_sum[..., None] + eps
+            mask_landmarks = mask_landmarks_sum > 0
+
+        # masked mean (if mask exists)
+
+        q_landmarks /= divisor
+        k_landmarks /= divisor
+
+        # similarities
 
         einops_eq = '... i d, ... j d -> ... i j'
         sim1 = einsum(einops_eq, q, k_landmarks)
