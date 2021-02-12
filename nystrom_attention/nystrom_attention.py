@@ -117,15 +117,12 @@ class NystromAttention(nn.Module):
             sim2.masked_fill_(~(mask_landmarks[..., None] * mask_landmarks[..., None, :]), mask_value)
             sim3.masked_fill_(~(mask_landmarks[..., None] * mask[..., None, :]), mask_value)
 
-        # eq (15) in the paper
+        # eq (15) in the paper and aggregate values
 
         attn1, attn2, attn3 = map(lambda t: t.softmax(dim = -1), (sim1, sim2, sim3))
         attn2_inv = moore_penrose_iter_pinv(attn2, iters)
-        attn = attn1 @ attn2_inv @ attn3
 
-        # aggregate
-
-        out = einsum('... i j, ... j d -> ... i d', attn, v)
+        out = (attn1 @ attn2_inv) @ (attn3 @ v)
 
         # add depth-wise conv residual of values
 
@@ -139,6 +136,7 @@ class NystromAttention(nn.Module):
         out = out[:, :n]
 
         if return_attn:
+            attn = attn1 @ attn2_inv @ attn3
             return out, attn
 
         return out
