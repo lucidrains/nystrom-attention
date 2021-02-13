@@ -1,8 +1,8 @@
 <img src="./diagram.png" width="500px"></img>
 
-## Nystrom Attention
+## Nyström Attention
 
-Implementation of Nystrom Self-attention, from the paper <a href="https://arxiv.org/abs/2102.03902">Nystromformer</a>.
+Implementation of Nyström Self-attention, from the paper <a href="https://arxiv.org/abs/2102.03902">Nyströmformer</a>.
 
 <a href="https://www.youtube.com/watch?v=m-zrcmRd7E4">Yannic Kilcher video</a>
 
