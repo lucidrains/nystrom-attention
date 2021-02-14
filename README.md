@@ -33,7 +33,7 @@ mask = torch.ones(1, 16384).bool()
 attn(x, mask = mask) # (1, 16384, 512)
 ```
 
-Nystromformer
+Nyströmformer, layers of Nyström attention
 
 ```python
 import torch
