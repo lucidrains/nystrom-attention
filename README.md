@@ -22,7 +22,7 @@ attn = NystromAttention(
     dim = 512,
     dim_head = 64,
     heads = 8,
-    m = 256,                # number of landmarks
+    num_landmarks = 256,    # number of landmarks
     pinv_iterations = 6,    # number of moore-penrose iterations for approximating pinverse. 6 was recommended by the paper
     residual = True         # whether to do an extra residual with the value or not. supposedly faster convergence if turned on
 )
@@ -33,6 +33,32 @@ mask = torch.ones(1, 16384).bool()
 attn(x, mask = mask) # (1, 16384, 512)
 ```
 
+Nystromformer
+
+```python
+import torch
+from nystrom_attention import Nystromformer
+
+model = Nystromformer(
+    dim = 512,
+    dim_head = 64,
+    heads = 8,
+    depth = 6,
+    num_landmarks = 256,
+    pinv_iterations = 6
+)
+
+x = torch.randn(1, 16384, 512)
+mask = torch.ones(1, 16384).bool()
+
+model(x, mask = mask) # (1, 16384, 512)
+```
+
+You can also import it as Nystromer if you wish
+
+```python
+from nystrom_attention import Nystromer
+```
 ## Citations
 
 ```bibtex

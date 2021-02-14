@@ -27,7 +27,7 @@ def moore_penrose_iter_pinv(x, iters = 6):
 
     return z
 
-# main class
+# main attention class
 
 class NystromAttention(nn.Module):
     def __init__(
@@ -35,29 +35,34 @@ class NystromAttention(nn.Module):
         dim,
         dim_head = 64,
         heads = 8,
-        m = 256,
+        num_landmarks = 256,
         pinv_iterations = 6,
         residual = True,
-        eps = 1e-8
+        eps = 1e-8,
+        dropout = 0.
     ):
         super().__init__()
         self.eps = eps
         inner_dim = heads * dim_head
 
-        self.m = m
+        self.num_landmarks = num_landmarks
         self.pinv_iterations = pinv_iterations
 
         self.heads = heads
         self.scale = dim_head ** -0.5
         self.to_qkv = nn.Linear(dim, inner_dim * 3, bias = False)
-        self.to_out = nn.Linear(inner_dim, dim)
+
+        self.to_out = nn.Sequential(
+            nn.Linear(inner_dim, dim),
+            nn.Dropout(dropout)
+        )
 
         self.residual = residual
         if residual:
             self.res_conv = nn.Conv2d(heads, heads, 1, groups = heads, bias = False)
 
     def forward(self, x, mask = None, return_attn = False):
-        b, n, _, h, m, iters, eps = *x.shape, self.heads, self.m, self.pinv_iterations, self.eps
+        b, n, _, h, m, iters, eps = *x.shape, self.heads, self.num_landmarks, self.pinv_iterations, self.eps
 
         # pad so that sequence can be evenly divided into m landmarks
 
@@ -140,3 +145,57 @@ class NystromAttention(nn.Module):
             return out, attn
 
         return out
+
+# transformer
+
+class PreNorm(nn.Module):
+    def __init__(self, dim, fn):
+        super().__init__()
+        self.norm = nn.LayerNorm(dim)
+        self.fn = fn
+
+    def forward(self, x, **kwargs):
+        x = self.norm(x)
+        return self.fn(x, **kwargs)
+
+class FeedForward(nn.Module):
+    def __init__(self, dim, mult = 4, dropout = 0.):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(dim, dim * mult),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(dim * mult, dim)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+class Nystromformer(nn.Module):
+    def __init__(
+        self,
+        *,
+        dim,
+        depth,
+        dim_head = 64,
+        heads = 8,
+        num_landmarks = 256,
+        pinv_iterations = 6,
+        attn_values_residual = True,
+        attn_dropout = 0.,
+        ff_dropout = 0.   
+    ):
+        super().__init__()
+
+        self.layers = nn.ModuleList([])
+        for _ in range(depth):
+            self.layers.append(nn.ModuleList([
+                PreNorm(dim, NystromAttention(dim = dim, dim_head = dim_head, heads = heads, num_landmarks = num_landmarks, pinv_iterations = pinv_iterations, residual = attn_values_residual, dropout = attn_dropout)),
+                PreNorm(dim, FeedForward(dim = dim, dropout = ff_dropout))
+            ]))
+
+    def forward(self, x, mask = None):
+        for attn, ff in self.layers:
+            x = attn(x, mask = mask) + x
+            x = ff(x) + x
+        return x
