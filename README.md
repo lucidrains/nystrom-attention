@@ -54,7 +54,7 @@ mask = torch.ones(1, 16384).bool()
 model(x, mask = mask) # (1, 16384, 512)
 ```
 
-You can also import it as Nystromer if you wish
+You can also import it as Nyströmer if you wish
 
 ```python
 from nystrom_attention import Nystromer
@@ -63,7 +63,7 @@ from nystrom_attention import Nystromer
 
 ```bibtex
 @misc{xiong2021nystromformer,
-    title   = {Nystr\"omformer: A Nystr\"om-Based Algorithm for Approximating Self-Attention},
+    title   = {Nyströmformer: A Nyström-Based Algorithm for Approximating Self-Attention},
     author  = {Yunyang Xiong and Zhanpeng Zeng and Rudrasis Chakraborty and Mingxing Tan and Glenn Fung and Yin Li and Vikas Singh},
     year    = {2021},
     eprint  = {2102.03902},
