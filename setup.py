@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'nystrom-attention',
   packages = find_packages(),
-  version = '0.0.7',
+  version = '0.0.8',
   license='MIT',
   description = 'Nystrom Attention - Pytorch',
   author = 'Phil Wang',

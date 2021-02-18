@@ -69,10 +69,10 @@ class NystromAttention(nn.Module):
         remainder = n % m
         if remainder > 0:
             padding = m - (n % m)
-            x = F.pad(x, (0, 0, 0, padding), value = 0)
+            x = F.pad(x, (0, 0, padding, 0), value = 0)
 
             if exists(mask):
-                mask = F.pad(mask, (0, padding), value = False)
+                mask = F.pad(mask, (padding, 0), value = False)
 
         # derive query, keys, values
 
