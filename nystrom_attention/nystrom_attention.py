@@ -38,6 +38,7 @@ class NystromAttention(nn.Module):
         num_landmarks = 256,
         pinv_iterations = 6,
         residual = True,
+        residual_conv_kernel = 33,
         eps = 1e-8,
         dropout = 0.
     ):
@@ -59,7 +60,9 @@ class NystromAttention(nn.Module):
 
         self.residual = residual
         if residual:
-            self.res_conv = nn.Conv2d(heads, heads, 1, groups = heads, bias = False)
+            kernel_size = residual_conv_kernel
+            padding = residual_conv_kernel // 2
+            self.res_conv = nn.Conv2d(heads, heads, (kernel_size, 1), padding = (padding, 0), groups = heads, bias = False)
 
     def forward(self, x, mask = None, return_attn = False):
         b, n, _, h, m, iters, eps = *x.shape, self.heads, self.num_landmarks, self.pinv_iterations, self.eps
@@ -182,6 +185,7 @@ class Nystromformer(nn.Module):
         num_landmarks = 256,
         pinv_iterations = 6,
         attn_values_residual = True,
+        attn_values_residual_conv_kernel = 33,
         attn_dropout = 0.,
         ff_dropout = 0.   
     ):
@@ -190,7 +194,7 @@ class Nystromformer(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(depth):
             self.layers.append(nn.ModuleList([
-                PreNorm(dim, NystromAttention(dim = dim, dim_head = dim_head, heads = heads, num_landmarks = num_landmarks, pinv_iterations = pinv_iterations, residual = attn_values_residual, dropout = attn_dropout)),
+                PreNorm(dim, NystromAttention(dim = dim, dim_head = dim_head, heads = heads, num_landmarks = num_landmarks, pinv_iterations = pinv_iterations, residual = attn_values_residual, residual_conv_kernel = attn_values_residual_conv_kernel, dropout = attn_dropout)),
                 PreNorm(dim, FeedForward(dim = dim, dropout = ff_dropout))
             ]))
 
