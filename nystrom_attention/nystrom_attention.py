@@ -141,7 +141,7 @@ class NystromAttention(nn.Module):
 
         out = rearrange(out, 'b h n d -> b n (h d)', h = h)
         out = self.to_out(out)
-        out = out[:, :n]
+        out = out[:, -n:]
 
         if return_attn:
             attn = attn1 @ attn2_inv @ attn3
