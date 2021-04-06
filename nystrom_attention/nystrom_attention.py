@@ -88,7 +88,7 @@ class NystromAttention(nn.Module):
             mask = rearrange(mask, 'b n -> b () n')
             q, k, v = map(lambda t: t * mask[..., None], (q, k, v))
 
-        q *= self.scale
+        q = q * self.scale
 
         # generate landmarks by sum reduction, and then calculate mean using the mask
 
