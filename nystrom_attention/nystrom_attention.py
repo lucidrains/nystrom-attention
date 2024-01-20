@@ -107,8 +107,8 @@ class NystromAttention(nn.Module):
 
         # masked mean (if mask exists)
 
-        q_landmarks /= divisor
-        k_landmarks /= divisor
+        q_landmarks = q_landmarks / divisor
+        k_landmarks = k_landmarks / divisor
 
         # similarities
 
@@ -135,7 +135,7 @@ class NystromAttention(nn.Module):
         # add depth-wise conv residual of values
 
         if self.residual:
-            out += self.res_conv(v)
+            out = out + self.res_conv(v)
 
         # merge and combine heads
 
