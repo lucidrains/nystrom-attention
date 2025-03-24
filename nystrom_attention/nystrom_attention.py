@@ -64,7 +64,7 @@ class NystromAttention(nn.Module):
             padding = residual_conv_kernel // 2
             self.res_conv = nn.Conv2d(heads, heads, (kernel_size, 1), padding = (padding, 0), groups = heads, bias = False)
 
-    def forward(self, x, mask = None, return_attn = False):
+    def forward(self, x, mask = None, return_attn = False, return_attn_matrices = False):
         b, n, _, h, m, iters, eps = *x.shape, self.heads, self.num_landmarks, self.pinv_iterations, self.eps
 
         # pad so that sequence can be evenly divided into m landmarks
@@ -143,7 +143,9 @@ class NystromAttention(nn.Module):
         out = self.to_out(out)
         out = out[:, -n:]
 
-        if return_attn:
+        if return_attn_matrices:
+            return out, (attn1, attn2_inv, attn3)
+        elif return_attn:
             attn = attn1 @ attn2_inv @ attn3
             return out, attn
 
