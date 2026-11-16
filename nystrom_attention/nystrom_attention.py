@@ -16,9 +16,10 @@ def moore_penrose_iter_pinv(x, iters = 6):
     abs_x = torch.abs(x)
     col = abs_x.sum(dim = -1)
     row = abs_x.sum(dim = -2)
-    z = rearrange(x, '... i j -> ... j i') / (torch.max(col) * torch.max(row))
+    scale = col.amax(dim = -1) * row.amax(dim = -1)
+    z = rearrange(x, '... i j -> ... j i') / scale[..., None, None]
 
-    I = torch.eye(x.shape[-1], device = device)
+    I = torch.eye(x.shape[-1], device = device, dtype = x.dtype)
     I = rearrange(I, 'i j -> () i j')
 
     for _ in range(iters):
